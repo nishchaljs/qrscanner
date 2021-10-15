@@ -28,10 +28,33 @@ import java.io.FileOutputStream
 import java.io.File
 
 import android.os.Environment.getExternalStorageDirectory
+import android.util.Base64
 import androidx.core.app.ActivityCompat
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
+import org.json.JSONObject
 import java.io.OutputStream
 import kotlin.coroutines.coroutineContext
 import dev.sasikanth.camerax.sample.ScanActivity as Sca
+import android.R
+import android.content.Context
+
+import android.widget.TextView
+
+import android.view.View
+
+import android.view.LayoutInflater
+import android.provider.MediaStore
+
+import android.net.Uri
+
+import android.R.attr.bitmap
+
+
+
+
+
+
 
 
 private fun ByteBuffer.toByteArray(): ByteArray {
@@ -43,7 +66,10 @@ private fun ByteBuffer.toByteArray(): ByteArray {
 
 class QrCodeAnalyzer(
 
-    private val onQrCodesDetected: (qrCode: Result) -> Unit
+    private val onQrCodesDetected: (qrCode: String) -> Unit
+// variable to hold context
+
+//save the context recievied via constructor in a local variable
 
 ) : ImageAnalysis.Analyzer {
 
@@ -54,6 +80,16 @@ class QrCodeAnalyzer(
         Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.ACCESS_FINE_LOCATION
     )
+
+    // variable to hold context
+    private var context: Context? = null
+
+//save the context recievied via constructor in a local variable
+
+    //save the context recievied via constructor in a local variable
+    fun YourNonActivityClass(context: Context) {
+        this.context = context
+    }
     fun verifyStoragePermissions(activity: Activity) {
         // Check if we have write permission
         val permission = ActivityCompat.checkSelfPermission(
@@ -186,8 +222,8 @@ class QrCodeAnalyzer(
 //        val bmp = image_?.let { toBitmap(it) }
         // get image's width and height
 
-        // convert to greyscale
-        // get image's width and height
+//         convert to greyscale
+//         get image's width and height
 //        val width: Int = bmp.getWidth()
 //        val height: Int = bmp.getHeight()
 //        var flag = 1
@@ -220,13 +256,16 @@ class QrCodeAnalyzer(
 //                bmp.setPixel(x, y, invertedPixel)
 //            }
 //        }
-//
+
 
 
         val intArray = IntArray(bmp.getWidth() * bmp.getHeight())
         //copy pixel data from the Bitmap into the 'intArray' array
         //copy pixel data from the Bitmap into the 'intArray' array
         bmp.getPixels(intArray, 0, bmp.getWidth(), 0, 0, bmp.getWidth(), bmp.getHeight())
+        val stream = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.PNG, 90, stream)
+        val barray = stream.toByteArray()
 
         val source: LuminanceSource =
             RGBLuminanceSource(bmp.getWidth(), bmp.getHeight(), intArray)
@@ -255,16 +294,65 @@ class QrCodeAnalyzer(
             //create a file to write bitmap data
 //            var f = bitmapToFile(bmp, "Bfile")
 //            println(f)
-            val result = reader.decode(binaryBitmap)
-            System.out.println("FOUND")
-            onQrCodesDetected(result)
-        } catch (e: NotFoundException) {
+
+            val py = Python.getInstance()
+            val module = py.getModule("main")
+            val results = module.callAttr("process_image",barray)
+            if (results.toString() == "QR detection fail"){
+
+                val result = reader.decode(binaryBitmap)
+                println("FOUND without detection")
+                onQrCodesDetected(result.text)
+            }
+            else{
+                println("HAHA WORKS ${(results.toString())}")
+                onQrCodesDetected(results.toString())
+
+//                val decodedString =
+//                    Base64.decode(results.toString(), Base64.DEFAULT)
+//
+//                val bmap = BitmapFactory.decodeByteArray(
+//                    decodedString,
+//                    0,
+//                    decodedString!!.size)
+//
+//                for(i in 500 downTo 50 step 50){
+//                    val bmp = Bitmap.createScaledBitmap(
+//                        bmap,
+//                        i,
+//                        i,
+//                        false
+//                    )
+//
+//                    val intArray = IntArray(bmp.getWidth() * bmp.getHeight())
+//                    //copy pixel data from the Bitmap into the 'intArray' array
+//                    //copy pixel data from the Bitmap into the 'intArray' array
+//                    bmp.getPixels(intArray, 0, bmp.getWidth(), 0, 0, bmp.getWidth(), bmp.getHeight())
+//                    val stream = ByteArrayOutputStream()
+//                    bmp.compress(Bitmap.CompressFormat.PNG, 90, stream)
+//                    val barray = stream.toByteArray()
+//
+//                    val source: LuminanceSource =
+//                        RGBLuminanceSource(bmp.getWidth(), bmp.getHeight(), intArray)
+//                    val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
+//                    val result = reader.decode(binaryBitmap)
+//                    System.out.println("FOUND in QR for $i")
+//
+//                    onQrCodesDetected(result.toString())
+//
+//                }
+
+            }}
+
+
+
+         catch (e: NotFoundException) {
             e.printStackTrace()
             System.out.println("NOT FOUND")
         }
-//        catch (e: ArrayIndexOutOfBoundsException){
-//            e.printStackTrace()
-//        }
+        catch (e: Exception){
+            e.printStackTrace()
+        }
         image.close()
     }
 

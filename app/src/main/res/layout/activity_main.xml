@@ -5,15 +5,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginTop="100sp"
+    android:paddingTop="100sp"
+    tools:ignore="MissingConstraints">
     <Button
         android:id="@+id/scanQr"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:paddingBottom="20sp"
         android:text="Scan QR"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/image"/>
+</LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

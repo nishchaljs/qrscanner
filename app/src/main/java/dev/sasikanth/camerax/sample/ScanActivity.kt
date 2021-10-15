@@ -15,6 +15,9 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.android.synthetic.main.activity_scan.*
 import java.util.concurrent.Executors
@@ -29,6 +32,8 @@ private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
 
 class ScanActivity : AppCompatActivity() {
 
+
+
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
 
     private val cameraExecutor = Executors.newSingleThreadExecutor()
@@ -36,6 +41,9 @@ class ScanActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scan)
+        if (! Python.isStarted()) {
+            Python.start(AndroidPlatform(this@ScanActivity))
+        }
 
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -77,8 +85,11 @@ class ScanActivity : AppCompatActivity() {
             .also {
                 it.setAnalyzer(cameraExecutor, QrCodeAnalyzer { qrResult ->
                     previewView.post {
-                        Log.d("QRCodeAnalyzer", "Barcode scanned: ${qrResult.text}")
-                        finish()
+                        Log.d("QRCodeAnalyzer", "Barcode scanned: $qrResult")
+                        image.setImageURI(null);
+                        image.setImageURI(qrResult.toUri())
+
+                        //finish()
                     }
                 })
             }
