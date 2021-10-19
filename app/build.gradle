@@ -31,6 +31,9 @@ android {
                 install "numpy"
                 install "pyzbar"
                 install "qrdecode"
+                install "pyzbar[scripts]"
+                install "matplotlib"
+
 
 //                // An sdist or wheel filename, relative to the project directory:
 //                install "MyPackage-1.2.3-py2.py3-none-any.whl"
@@ -82,4 +85,10 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    //api requests
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.google.code.gson:gson:2.8.8'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.2")
 }

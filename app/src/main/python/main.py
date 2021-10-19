@@ -1,16 +1,7 @@
 from PIL import Image
-#from flask import Flask, request, jsonify
 import cv2
 import numpy as np
-#from pyzbar import pyzbar
-import requests
-import time
-import json
-import base64
 import io
-import qrdecode
-# import the necessary packages
-import os
 from os.path import dirname, join
 from com.chaquo.python import Python
 
@@ -18,13 +9,12 @@ def process_image(input_frame):
     # Read the image via file.stream
     frame = Image.open(io.BytesIO(bytes(input_frame)))
     img_np= np.array(frame)
-    img_np = cv2.resize(img_np,(img_np.shape[1]//2,img_np.shape[0]//2))
+    #img_np = cv2.resize(img_np,(img_np.shape[1]//2,img_np.shape[0]//2))
     files_dir = str(Python.getPlatform().getApplication().getFilesDir())
     fname = join(dirname(files_dir),"f.jpeg")
     with open(fname, 'w',encoding='utf8', errors='ignore') as fin:
         fin.write(str(img_np))
-
-
+    cv2.imwrite(fname, img_np)
     original = img_np.copy()
     gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray, (9,9), 0)
@@ -53,71 +43,7 @@ def process_image(input_frame):
                 invertedPixel = (0xFFFFFF - gray[i][j]) | 0xFF000000
                 img_np[i][j] = invertedPixel
         cv2.imwrite(fname, img_np)
-        x = cv2.imread(fname)
         return fname
     except:
         return 'QR detection fail'
-
-
-    url = 'https://qrzbar.herokuapp.com/im_size'
-
-    my_img = {'image': open(fname,"rb")}
-    # try:
-    #     r = requests.post(url, files=my_img)
-    # # convert server response into JSON format.
-    #     print("RESult : " + str(r.json()))
-    #
-    # except:
-    #     print("Connection refused by the server..")
-    #     time.sleep(5)
-    #     print("Was a nice sleep, now let me continue...")
-
-
-    flag=1
-    gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
-    for i in range(len(img_np)):
-        for j in range(len(img_np[0])):
-            invertedPixel = (0xFFFFFF - gray[i][j]) | 0xFF000000
-            img_np[i][j] = invertedPixel
-
-    l =[]
-    for i in range(50,500,50):
-        img_cp = cv2.resize(img_np,(i,i))
-        l.append(img_cp)
-
-
-    for i in l:
-        qrDecoder = cv2.QRCodeDetector()
-        data,bbox,rectifiedImage = qrDecoder.detectAndDecode(i)
-        #barcodes = pyzbar.decode(i)
-        barcode_info = "NONE"
-        # for barcode in barcodes:
-        #     x, y , w, h = barcode.rect
-        barcode_info = data
-        if barcode_info!="":
-            print("YES")
-            return barcode_info
- #           break
-
-    if barcode_info=="":
-        return str(base64.b64encode(cv2.imencode('.jpg',  img_np)[1]))
-
-
-    url = 'https://nfc-project-rvce.herokuapp.com/api/qrcode'
-    payload = {"code":barcode_info,"lat":"12.9564672","long":"77.594624"}
-    r = requests.post(url, json=payload)
-    # convert server response into JSON format.
-    try:
-        print(r.json())
-        if (r.json()['msg']=='success'):
-            if r.json()['data']==None:
-                return {'msg': 'success', 'info': 'None'}
-            else:
-                return {'msg': 'success', 'info': r.json()['data'] }
-    except:
-        print("2nd API ERROR!!!")
-
-
-
-
-    return {'msg': '2nd Level API failed or UID doesnt exist', 'info': 'None'}
+    return "NONE"
